@@ -19,10 +19,14 @@ st.title('変換アプリケーション')
 # button = left_column.button('右のカラム')
 # if button:
 #     right_column.write('ここはカラム')
+add_selectbox = st.sidebar.selectbox(
+    "選択してください",
+    ("カット", "溶接")
+)
 
 sentence_from = st.text_area("文字を入力してください", height=300)
 
-def text_input(fro):
+def text_input_1(fro):
     texts = re.sub(r'[ ]+', '', fro )
     result = re.findall(r'[A-Z]=-?[0-9]{1,5}\.[0-9]{2}|LWPOLYLINE|面積|長さ',texts)
     'G90'
@@ -63,13 +67,66 @@ def text_input(fro):
     'M02'
 
 
+def text_input_2(fro):
+    texts = re.sub(r'[ ]+', '', fro )
+    result = re.findall(r'[A-Z]=-?[0-9]{1,5}\.[0-9]{2}|LWPOLYLINE|面積|長さ',texts)
+    'G90'
+    'F11.5'
+    'M05'
+    'G11 L2;'
+    'G00 X'+result[0][2:]+'0 Y'+result[1][2:]+'0 Z'+result[2][2:]+'0;'
+    'M22'
+    'G04 T100;'
+    'M07'
+    'G04 T300;'
+    'M60'
+
+    result_list = list(result)
+
+
+    for i in range(int(len(result_list)/3)):
+        if result_list[i*3]=='LWPOLYLINE':
+            z = re.sub('=', '',result_list[i*3+3])
+            y = re.sub('=', '',result_list[i*3+4])
+            x = re.sub('=', '',result_list[i*3+5])
+            'M08'
+            'M24'
+            'G00 ' + [z][0] +' '+ [y][0] +' '+ [x][0] + ';'
+            'M22'
+            'G04 T100;'
+            'M07'
+        else:
+            q = re.sub('=', '',result_list[i*3])
+            w = re.sub('=', '',result_list[i*3+1])
+            e = re.sub('=', '',result_list[i*3+2])
+            'G01 '+ [q][0] +' '+ [w][0] +' '+ [e][0] + ';'
+    'M64'
+    'M08'
+    'G04 T100;'
+    'M24'
+    'G00 X 0.000 Y 0.000 Z 0.000;'
+    'G00 X 0.000 Y 0.000 Z 0.000;'
+    'M02'
+
+    
+
 button = st.button('変換')
-if button:
-    writeer = text_input(sentence_from)
-    try:
-        writeer
-    except IndexError:
-        st.write("違う")
+
+if add_selectbox == "溶接":
+    if button:
+        writeer = text_input_1(sentence_from)
+        try:
+            writeer
+        except IndexError:
+            st.write("違う")
+            
+elif add_selectbox == "カット":
+    if button:
+        writeer = text_input_2(sentence_from)
+        try:
+            writeer
+        except IndexError:
+            st.write("違う")
 
 
 
